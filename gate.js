@@ -1,10 +1,12 @@
 // Protection par mot de passe du mini-guide Du Lagon au Siam.
 // Mot de passe calcule automatiquement chaque mois, aucune action manuelle necessaire.
-// Mot de passe unique : SIAM-2027.
+// Format : SIAM-MM-AAAA (ex. SIAM-10-2026 pour octobre 2026, SIAM-11-2026 pour novembre...).
 // A donner par email a chaque acheteur du mois.
 (function () {
   function getExpectedPassword() {
-    return 'SIAM-2027'; // mot de passe unique de l'edition (identique a celui envoye par le Worker)
+    var d = new Date();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    return 'SIAM-' + mm + '-' + d.getFullYear();
   }
   function normalizePw(s) {
     return String(s).toLowerCase().replace(/[\s-]/g, '');
