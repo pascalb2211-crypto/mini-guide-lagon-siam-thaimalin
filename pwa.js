@@ -206,6 +206,11 @@
     '#tmSheet h3{margin:0 0 12px;font-size:16px}#tmSheet .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}' +
     '#tmSheet .grid a,#tmSheet .grid button,#tmSheet .list button{border:1px solid #ffffff2a;background:#ffffff0d;color:#fff;border-radius:12px;padding:12px 0;text-align:center;text-decoration:none;font:700 15px "Segoe UI",Arial,sans-serif;cursor:pointer}' +
     '#tmSheet .book a{display:block;border:1px solid #ffffff2a;background:#ffffff0d;color:#fff;border-radius:12px;padding:12px 16px;text-decoration:none}#tmSheet .book a b{display:block;font-size:15px}#tmSheet .book a small{opacity:.7;font-size:12.5px}#tmSheet .toc button{display:flex;align-items:center;gap:12px;width:100%}#tmSheet .toc .num{flex:0 0 34px;height:34px;border-radius:50%;background:#ffffff1a;display:flex;align-items:center;justify-content:center;font-size:14px}#tmSheet .toc .cur{background:#d3540033;border-color:#d35400}#tmSheet .toc .cur .num{background:#d35400}#tmSheet .toc .addfav{background:#d35400;border-color:#d35400;margin-bottom:6px}#tmSheet .grid .cur{background:#d35400;border-color:#d35400}#tmSheet .list{display:grid;gap:8px}#tmSheet .list button{text-align:left;padding:14px 16px;font-size:15px}' +
+    '#tmSheet .tdCard{background:#ffffff0d;border:1px solid #ffffff1f;border-radius:14px;padding:14px;margin-bottom:12px}#tmSheet .tdBig{font-size:22px;font-weight:800;line-height:1.25}#tmSheet .tdSub{opacity:.75;font-size:14px;margin-top:4px}' +
+    '#tmSheet .tdRow{display:flex;gap:10px}#tmSheet .tdRow>div{flex:1}#tmSheet .today label{display:block;font-size:12px;font-weight:700;opacity:.85}#tmSheet .today input,#tmSheet .today select{display:block;width:100%;margin-top:5px;padding:11px 10px;border-radius:10px;border:1px solid #ffffff2a;background:#242a33;color:#fff;font:600 15px "Segoe UI",Arial,sans-serif;color-scheme:dark}' +
+    '#tmSheet .tdBtn{display:inline-block;padding:11px 14px;border-radius:10px;font:800 14px "Segoe UI",Arial,sans-serif;color:#fff;text-decoration:none;background:linear-gradient(135deg,#d35400,#f0955a);border:0;cursor:pointer}#tmSheet .tdBtn.alt{background:#ffffff1a;border:1px solid #ffffff2a}' +
+    '#tmSheet .today button.tdFav{display:inline-block;width:auto;margin:0 6px 6px 0;padding:8px 12px;border-radius:10px;font:700 13px "Segoe UI",Arial,sans-serif;text-align:left}' +
+    '#tmSheet .inspGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}#tmSheet .inspCard{display:block;text-decoration:none;color:#fff;border-radius:14px;padding:14px 12px;font-weight:800;font-size:14px;line-height:1.25}#tmSheet .inspCard b{display:block;font-size:26px;font-weight:400;margin-bottom:4px}#tmSheet .inspCard small{display:block;font-weight:600;opacity:.9;margin-top:4px;font-size:11.5px}' +
     '@media(max-width:800px){#tmTab{display:flex}#tmTab.lock{display:none}body.tmHasTab{padding-bottom:calc(84px + env(safe-area-inset-bottom)) !important}body.tmHasTab .zoomBtn{bottom:92px}}';
 
   function el(tag, attrs, html){ var e = document.createElement(tag); for(var k in attrs||{}) e.setAttribute(k, attrs[k]); if(html != null) e.innerHTML = html; return e; }
@@ -247,9 +252,10 @@
       function refreshFav(){ var on = favs().indexOf(cur) >= 0; var i = fav.querySelector('b'); i.textContent = on ? '♥' : '♡'; fav.classList.toggle('on', on); }
       refreshFav();
       var items = [cover, toc, fav];
+      var openWeather = null;
       var WX = me.getAttribute('data-weather');                  /* "Ville:lat,lon;Ville:lat,lon" */
       if(WX){
-        var wx = btn('🌤️', 'Météo', function(){
+        openWeather = function(){
           var l = el('div', { 'class': 'wx' }, '<p style="margin:0;opacity:.7">Chargement…</p>'); openSheet('Météo en direct', l);
           var places = WX.split(';').map(function(x){ var a = x.split(':'); var c = a[1].split(','); return { n: a[0], la: c[0], lo: c[1] }; });
           var ico = function(c){ return c === 0 ? '☀️' : c < 3 ? '⛅' : c < 4 ? '☁️' : c < 50 ? '🌫️' : c < 70 ? '🌧️' : c < 80 ? '🌨️' : c < 85 ? '🌦️' : c < 95 ? '🌧️' : '⛈️'; };
@@ -261,9 +267,72 @@
               var days = [0,1,2].map(function(i){ return '<span style="flex:1;text-align:center;font-size:12px;opacity:.85">' + ['Auj.','Demain','Après'][i] + '<br>' + Math.round(dl.temperature_2m_min[i]) + '–' + Math.round(dl.temperature_2m_max[i]) + '°<br>💧' + (dl.precipitation_probability_max[i] || 0) + '%</span>'; }).join('');
               return '<div style="border:1px solid #ffffff2a;background:#ffffff0d;border-radius:14px;padding:12px 14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">' + p.n + '</b><span style="font-size:22px">' + ico(c.weather_code) + ' ' + Math.round(c.temperature_2m) + '°C</span></div><div style="font-size:12px;opacity:.7;margin:2px 0 8px">Humidité ' + c.relative_humidity_2m + '%</div><div style="display:flex;gap:6px">' + days + '</div></div>'; }).join('');
           }).catch(function(){ l.innerHTML = '<p style="margin:0">La météo a besoin d\'une connexion Internet. Réessaie quand tu es en ligne.</p>'; });
-        });
-        items.push(wx);
+        };
       }
+
+      /* ---------- « Aujourd'hui » : statut du voyage, destination du jour, météo, favoris, inspirations ---------- */
+      var COUNTRY = (me.getAttribute('data-name') || '').replace(/^Mini-guide\s*/i, '');
+      var PLACES = WX ? WX.split(';').map(function(x){ var a = x.split(':'); var c = a[1].split(','); return { n: a[0], la: c[0], lo: c[1] }; }) : [];
+      var INSPIRE = [
+        { s: 'thailande', e: '🌴', t: 'Mini-guide Thaïlande', d: 'Bangkok, Chiang Mai, les îles', c: '#1676d2' },
+        { s: 'vietnam', e: '🌿', t: 'Mini-guide Vietnam', d: 'Hanoï, Hội An, Saïgon', c: '#1fa66b' },
+        { s: 'laos', e: '🐘', t: 'Mini-guide Laos', d: 'Luang Prabang, Vientiane', c: '#f07b22' },
+        { s: 'lagon-siam', e: '🌴', t: 'Du Lagon au Siam', d: 'Réunion, Bangkok, Chiang Mai, Krabi', c: '#a3174f' },
+        { s: 'cambodge', e: '🛕', t: 'Mini-guide Cambodge', d: 'Angkor, Siem Reap', c: '#673ab7' },
+        { s: 'bali', e: '🌺', t: 'Mini-guide Bali', d: 'Ubud, plages, rizières', c: '#ed4775' },
+        { s: 'premium', e: '👑', t: 'Guide premium Thaï Malin', d: 'Itinéraires complets et bons plans', c: '#2a2f3a' }
+      ];
+      var INSPIRE_URL = 'https://thaimalin.fr';                    /* à remplacer par les pages de vente quand elles existent */
+      function ls(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+      function lset(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+      function dayDiff(v){ if(!v) return null; var t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(v + 'T00:00:00') - t) / 86400000); }
+      var today = btn('📅', 'Aujourd’hui', function(){
+        var dep = ls('tm-departure'), ret = ls('tm-return'), CK = 'tm-city-' + slug;
+        var l = el('div', { 'class': 'today' });
+        l.appendChild(el('a', { 'class': 'tdBtn', href: 'https://pascalb2211-crypto.github.io/mon-voyage-hub/', style: 'display:block;text-align:center;margin-bottom:12px' }, '🧭 Mon voyage : vol, documents, programme'));
+        var st = el('div', { 'class': 'tdCard' }); l.appendChild(st);
+        function status(){
+          var dd = dayDiff(dep), dr = dayDiff(ret), big = 'Bienvenue ! 🌺', sub = 'Entre ta date de départ pour suivre ton voyage jour après jour.';
+          if(dd !== null){
+            if(dd > 1){ big = '🌴 J-' + dd; sub = 'Plus que ' + dd + ' jours avant le départ.'; }
+            else if(dd === 1){ big = '🌴 C’est demain !'; sub = 'Dernières vérifications : passeport, visa, assurance, eSIM.'; }
+            else if(dr !== null && dr < 0){ big = 'Bon retour ! 🌺'; sub = 'J’espère que ce voyage était magnifique. La suite ? Voir les inspirations plus bas.'; }
+            else { var n = 1 - dd; big = '✈️ Jour ' + n + (dr !== null ? ' sur ' + (n + dr) : ''); sub = dr === null ? 'Bon voyage !' : dr === 0 ? 'Dernier jour, profites-en !' : 'Encore ' + dr + ' jour' + (dr > 1 ? 's' : '') + ' sur place.'; }
+          }
+          st.innerHTML = '<div class="tdBig">' + big + '</div><div class="tdSub">' + sub + '</div>';
+        }
+        status();
+        var dates = el('div', { 'class': 'tdCard tdRow' }, '<div><label>Départ<input type="date" id="tdDep"></label></div><div><label>Retour<input type="date" id="tdRet"></label></div>');
+        l.appendChild(dates);
+        dates.querySelector('#tdDep').value = dep; dates.querySelector('#tdRet').value = ret;
+        dates.addEventListener('input', function(){ dep = dates.querySelector('#tdDep').value; ret = dates.querySelector('#tdRet').value; lset('tm-departure', dep); lset('tm-return', ret); status(); });
+        if(PLACES.length){
+          var cityBox = el('div', { 'class': 'tdCard' }, '<label>Ma destination du jour<select id="tdCity"></select></label><div class="tdW tdSub">Météo…</div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><a class="tdBtn" target="_blank" rel="noopener">📍 Y aller (Maps)</a>' + (openWeather ? '<button type="button" class="tdBtn alt">🌤️ Toute la météo</button>' : '') + '</div>');
+          l.appendChild(cityBox);
+          var sel = cityBox.querySelector('select'); PLACES.forEach(function(p){ var o = el('option', { value: p.n }, p.n); sel.appendChild(o); });
+          var saved = ls(CK); if(saved && PLACES.some(function(p){ return p.n === saved; })) sel.value = saved;
+          var wb = cityBox.querySelector('.alt'); if(wb) wb.addEventListener('click', function(){ openWeather(); });
+          var ico = function(c){ return c === 0 ? '☀️' : c < 3 ? '⛅' : c < 4 ? '☁️' : c < 50 ? '🌫️' : c < 70 ? '🌧️' : c < 80 ? '🌨️' : c < 85 ? '🌦️' : c < 95 ? '🌧️' : '⛈️'; };
+          function city(){
+            var p = PLACES.filter(function(x){ return x.n === sel.value; })[0] || PLACES[0]; lset(CK, p.n);
+            cityBox.querySelector('a').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.n + ', ' + COUNTRY);
+            var w = cityBox.querySelector('.tdW'); w.textContent = 'Météo en cours de chargement…';
+            fetch('https://api.open-meteo.com/v1/forecast?latitude=' + p.la + '&longitude=' + p.lo + '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1')
+              .then(function(r){ return r.json(); }).then(function(d){ if(sel.value !== p.n) return; w.innerHTML = '<span style="font-size:24px;font-weight:800;color:#fff">' + ico(d.current.weather_code) + ' ' + Math.round(d.current.temperature_2m) + '°C</span><br>Aujourd’hui : ' + Math.round(d.daily.temperature_2m_min[0]) + '–' + Math.round(d.daily.temperature_2m_max[0]) + '° · 💧 ' + (d.daily.precipitation_probability_max[0] || 0) + '% de pluie'; })
+              .catch(function(){ w.textContent = 'La météo a besoin d’une connexion Internet.'; });
+          }
+          sel.addEventListener('change', city); city();
+        }
+        var f = favs();
+        var fb = el('div', { 'class': 'tdCard' }, '<b>♥ Mes pages favorites</b>'); var fw = el('div', { style: 'margin-top:10px' }); fb.appendChild(fw);
+        if(!f.length) fw.appendChild(el('span', { 'class': 'tdSub' }, 'Aucun favori pour l’instant. Ajoute-en avec « ♡ Favoris ».')); else f.forEach(function(n){ var b = el('button', { type: 'button', 'class': 'tdFav' }, n + ' — ' + title(n)); b.addEventListener('click', function(){ location.href = url(n); }); fw.appendChild(b); });
+        l.appendChild(fb);
+        var ib = el('div', { 'class': 'tdCard' }, '<b>✨ Inspirations — la suite du voyage</b>'); var ig = el('div', { 'class': 'inspGrid' }); ib.appendChild(ig);
+        INSPIRE.filter(function(x){ return x.s !== slug; }).forEach(function(x){ ig.appendChild(el('a', { 'class': 'inspCard', href: INSPIRE_URL, target: '_blank', rel: 'noopener', style: 'background:' + x.c }, '<b>' + x.e + '</b>' + x.t + '<small>' + x.d + '</small>')); });
+        l.appendChild(ib);
+        openSheet('Aujourd’hui', l);
+      });
+      items.push(today);
       var BK = me.getAttribute('data-booking');                  /* code pays Booking : vn, la, kh, th */
       if(BK){
         var BP = parseInt(me.getAttribute('data-booking-page') || '0', 10);   /* page « Centre de réservation » du guide, si elle existe */
@@ -282,6 +351,8 @@
         });
         items.push(bk);
       }
+      var pdf = btn('🖨️', 'PDF', function(){ printAll(); });
+      items.push(pdf);
       items.forEach(function(b){ bar.appendChild(b); });
     } else {                                                      /* guide en une seule page (fonctions déjà présentes dans index.html) */
       function call(f){ try{ f(); }catch(e){} }
@@ -300,14 +371,59 @@
     document.body.appendChild(bar); document.body.classList.add('tmHasTab');
   }
 
-  /* Agrandissement : un appui sur l'image (hors boutons cliquables) l'ouvre en grand, depuis le haut */
+  /* Agrandissement : un appui sur une case de la page l'ouvre seule, en grand (zones dans zones.json).
+     En dehors d'une case : agrandissement centré sur l'endroit touché. */
+  var ZONES = null;
+  function loadZones(){
+    try{ fetch('zones.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ ZONES = j; }).catch(function(){}); }catch(e){}
+  }
+  function zoneAt(n, x, y){
+    var zs = (ZONES && ZONES[n]) || []; var best = null, ba = 1e12;
+    zs.forEach(function(z){ if(x >= z[0] && x <= z[2] && y >= z[1] && y <= z[3]){ var a = (z[2] - z[0]) * (z[3] - z[1]); if(a < ba){ ba = a; best = z; } } });
+    return best;
+  }
   function zoomSetup(){
     var img = document.querySelector('.page img'); var mm = location.pathname.match(/page(\d+)(\.html)?$/); if(!img || (mm && parseInt(mm[1], 10) === FIRST)) return;
+    var n = mm ? parseInt(mm[1], 10) : 0;
+    loadZones();
     var z = el('div', { id: 'tmZoom' }); var zi = el('img', { alt: '' }); var zx = el('button', { type: 'button', 'aria-label': 'Fermer' }, '✕'); z.appendChild(zi); z.appendChild(zx); document.body.appendChild(z);
     var zc = document.createElement('style'); zc.textContent = '#tmZoom{position:fixed;inset:0;z-index:1700;background:#000f;overflow:auto;display:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}#tmZoom.open{display:block}#tmZoom img{display:block;width:170%;max-width:none;height:auto}#tmZoom button{position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;width:44px;height:44px;border-radius:50%;border:0;background:#000b;color:#fff;font-size:22px;z-index:1}.page img{cursor:zoom-in}'; document.head.appendChild(zc);
     function close(){ z.classList.remove('open'); document.documentElement.style.overflow = ''; }
     zx.addEventListener('click', close); z.addEventListener('click', function(e){ if(e.target === z) close(); });
-    img.addEventListener('click', function(){ zi.src = img.currentSrc || img.src; z.classList.add('open'); z.scrollTop = 0; z.scrollLeft = 0; document.documentElement.style.overflow = 'hidden'; });
+    img.addEventListener('click', function(e){
+      var r = img.getBoundingClientRect(); var fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+      var zone = zoneAt(n, fx * 1024, fy * 1536);
+      zi.style.width = ''; zi.src = img.currentSrc || img.src; z.classList.add('open'); document.documentElement.style.overflow = 'hidden';
+      function place(){
+        var VW = z.clientWidth || innerWidth, VH = z.clientHeight || innerHeight;
+        if(zone){
+          var zw = zone[2] - zone[0], zh = zone[3] - zone[1]; var IW = Math.min(VW * 0.94 / (zw / 1024), VW * 4.5); zi.style.width = IW + 'px';
+          var IH = zi.offsetHeight || IW * 1.5;
+          z.scrollLeft = Math.max(0, zone[0] / 1024 * IW - VW * 0.03);
+          z.scrollTop = Math.max(0, zone[1] / 1536 * IH - Math.max(40, (VH - zh / 1536 * IH) / 2));
+        } else {
+          z.scrollLeft = Math.max(0, fx * zi.offsetWidth - VW / 2); z.scrollTop = Math.max(0, fy * zi.offsetHeight - VH / 2);
+        }
+      }
+      place(); if(zi.complete) requestAnimationFrame(place); else zi.addEventListener('load', place, { once: true });
+    });
+    /* petit conseil au premier affichage */
+    try{ if(!localStorage.getItem('tm-zone-hint')){ var h = el('div', { id: 'tmHint' }, '💡 Touche une case pour l’agrandir'); var hc = document.createElement('style'); hc.textContent = '#tmHint{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#1a1d24;color:#fff;border:1px solid #d35400;border-radius:999px;padding:10px 16px;font:700 14px "Segoe UI",Arial,sans-serif;z-index:1650;opacity:0;pointer-events:none;transition:.4s;white-space:nowrap}#tmHint.on{opacity:1;transform:translate(-50%,0)}'; document.head.appendChild(hc); document.body.appendChild(h); setTimeout(function(){ h.classList.add('on'); }, 1500); setTimeout(function(){ h.classList.remove('on'); localStorage.setItem('tm-zone-hint', '1'); }, 6500); } }catch(e){}
+  }
+
+  /* Impression / PDF : toutes les pages du guide, une par feuille A4 */
+  function printAll(){
+    var old = document.getElementById('tmPrint'); if(old) old.remove();
+    var box = el('div', { id: 'tmPrint' }); var imgs = [];
+    var cur = document.querySelector('.page img'); var src = cur ? (cur.getAttribute('src') || '') : '';
+    var mm = src.match(/^(.*?)page(\d+)(\.\w+)$/); var base = mm ? mm[1] : 'images/'; var ext = mm ? mm[3] : '.webp';
+    for(var n = FIRST; n <= (TOTAL || 0); n++){
+      var im = new Image(); im.alt = ''; im.src = (n === 0 ? base + 'cover' + ext : base + 'page' + n + ext); box.appendChild(im); imgs.push(im);
+    }
+    document.body.appendChild(box);
+    var st = document.getElementById('tmPrintCss');
+    if(!st){ st = document.createElement('style'); st.id = 'tmPrintCss'; st.textContent = '#tmPrint{display:none}@page{size:A4;margin:0}@media print{body>*:not(#tmPrint){display:none!important}#tmPrint{display:block!important}#tmPrint img{display:block;width:198mm;height:297mm;margin:0 auto;object-fit:contain;break-after:page;page-break-after:always}html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}'; document.head.appendChild(st); }
+    Promise.all(imgs.map(function(i){ return i.complete ? 1 : new Promise(function(r){ i.onload = i.onerror = r; }); })).then(function(){ setTimeout(function(){ window.print(); }, 150); });
   }
   function sync(){ var bar = document.getElementById('tmTab'); if(bar) bar.classList.toggle('lock', locked()); }
   ready(function(){
