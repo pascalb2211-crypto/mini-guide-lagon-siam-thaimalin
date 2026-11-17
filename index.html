@@ -21,9 +21,9 @@
   .toggle{display:flex;background:var(--navy2);border:2px solid var(--yellow);border-radius:999px;overflow:hidden}
   .toggle button{border:0;background:transparent;color:#fff;font-weight:800;font-size:14px;padding:8px 14px;cursor:pointer;font-family:inherit}
   .toggle button[aria-pressed="true"]{background:var(--yellow);color:var(--navy)}
-  .stage{width:100%;max-width:560px;padding:12px 12px 0}
-  .page{position:relative;width:100%;aspect-ratio:1199/1312;border-radius:10px;overflow:hidden;background:var(--navy2)}
-  .page img{width:100%;height:100%;display:block;object-fit:contain;user-select:none;-webkit-user-drag:none}
+  .stage{width:100%;max-width:560px;padding:0}
+  .page{position:relative;width:100%;aspect-ratio:auto;border-radius:0;overflow:hidden;background:var(--navy2)}
+  .page img{width:100%;height:auto;display:block;object-fit:contain;user-select:none;-webkit-user-drag:none}
   .hs{position:absolute;display:block;background:transparent;border:0;cursor:pointer;text-decoration:none;border-radius:14px}
   .hs:focus-visible{outline:3px solid var(--yellow)}
   a.hs:hover{outline:2px solid rgba(244,201,93,.55)}
@@ -100,6 +100,17 @@
   .gate button{width:100%;height:50px;border:0;border-radius:999px;background:var(--yellow);color:var(--navy);font-weight:800;font-size:16px;cursor:pointer}
   .gate .err{color:#ff9a9a;font-size:14px;margin-top:10px;display:none}
   .gate .buy{display:block;margin-top:14px;color:var(--yellow);font-weight:700;font-size:15px}
+
+.tools{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px!important;overflow:visible!important}.tools button{padding:8px 4px!important;font-size:12.5px!important;white-space:nowrap}
+.page{min-height:calc(100dvh - 236px);display:flex;align-items:center;justify-content:center;background:#1a0f14}
+.page::before{content:'';position:absolute;inset:-20px;background:var(--bg) center/cover;filter:blur(22px) brightness(.5) saturate(1.1)}
+.pi{position:relative;width:100%}
+.zbtn{position:absolute;right:8px;top:8px;z-index:5;border:2px solid var(--yellow);background:rgba(26,15,20,.85);color:var(--yellow);font-weight:800;font-size:14px;border-radius:999px;padding:8px 14px;cursor:pointer}
+.zoom{position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column}
+.zoom.open{display:flex}
+.zoom .zs{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
+.zoom img{width:230vw;max-width:none;display:block}
+.zoom button{margin:10px auto;border:2px solid var(--yellow);background:var(--yellow);color:#1a0f14;font-weight:800;border-radius:999px;padding:12px 28px;font-size:16px}
 </style>
 </head>
 <body>
@@ -113,13 +124,14 @@
   <button type="button" data-k="urgences">&#128680; Urgences</button>
   <button type="button" data-k="lexique">&#128483;&#65039; Lexique</button>
 </div>
-<main class="stage"><div class="page" id="page"><img id="img" alt="" decoding="async"></div></main>
+<main class="stage"><div class="page" id="page"><div class="pi" id="pi"><img id="img" alt="" decoding="async"><button type="button" class="zbtn" id="zbtn">&#128269; Agrandir</button></div></div></main>
 <p class="hint" id="hint"></p>
 <nav class="bar"><div class="in">
   <button type="button" class="btn prev" id="prev">&larr; Pr&eacute;c&eacute;dent</button>
   <button type="button" class="count" id="count" aria-label="Sommaire">1/22</button>
   <button type="button" class="btn next" id="next">Suivant &rarr;</button>
 </div></nav>
+<div class="zoom" id="zoom"><div class="zs"><img id="zimg" alt=""></div><button type="button" id="zclose">Fermer</button></div>
 <div class="sum" id="sum" role="dialog" aria-modal="true"><div class="box"><h2>Sommaire</h2><div id="sumlist"></div><button type="button" class="close" id="sumclose">Fermer</button></div></div>
 <div class="met" id="info" role="dialog" aria-modal="true"><div class="box"><h2 id="infoT"></h2><div id="infoB"></div><button type="button" class="close" id="infoclose">Fermer</button></div></div>
 <div class="met" id="met" role="dialog" aria-modal="true"><div class="box">
@@ -206,7 +218,7 @@
     $("count").textContent=(idx+1)+"/"+P.length;
     $("prev").disabled=idx===0;$("next").disabled=idx===P.length-1;
     $("hint").textContent=HS[idx+1]?"Touche une carte pour aller plus loin.":"";
-    var old=$("page").querySelectorAll(".hs");for(var i=0;i<old.length;i++){old[i].remove();}
+    $("page").style.setProperty("--bg","url("+src(idx)+")");var old=$("pi").querySelectorAll(".hs");for(var i=0;i<old.length;i++){old[i].remove();}
     (HS[idx+1]||[]).forEach(function(h){
       var el=document.createElement("a");
       if(h.type==="goto"){el.href="#";el.addEventListener("click",function(e){e.preventDefault();go(h.to-1);});}
@@ -214,7 +226,7 @@
       else{el.href=h.href;if(h.ext){el.target="_blank";el.rel="noopener";}}
       el.className="hs";el.setAttribute("aria-label",h.label);
       el.style.left=h.x+"%";el.style.top=h.y+"%";el.style.width=h.w+"%";el.style.height=h.h+"%";
-      $("page").appendChild(el);
+      $("pi").appendChild(el);
     });
     if(idx<P.length-1){var pre=new Image();pre.src=src(idx+1);}
     set(K+"page",String(idx));
@@ -223,7 +235,7 @@
   $("prev").addEventListener("click",function(){go(idx-1);});
   $("next").addEventListener("click",function(){go(idx+1);});
   document.addEventListener("keydown",function(e){
-    if(e.key==="Escape"){$("sum").classList.remove("open");$("met").classList.remove("open");$("info").classList.remove("open");}
+    if(e.key==="Escape"){$("zoom").classList.remove("open");$("sum").classList.remove("open");$("met").classList.remove("open");$("info").classList.remove("open");}
     if($("sum").classList.contains("open")||$("met").classList.contains("open")||$("info").classList.contains("open"))return;
     if(e.key==="ArrowLeft")go(idx-1);if(e.key==="ArrowRight")go(idx+1);
   });
@@ -239,6 +251,8 @@
     var as=$("sumlist").querySelectorAll("a");
     for(var i=0;i<as.length;i++){as[i].addEventListener("click",function(e){e.preventDefault();$("sum").classList.remove("open");go(parseInt(this.getAttribute("data-i"),10));});}
   }
+  $("zbtn").addEventListener("click",function(){$("zimg").src=src(idx);$("zoom").classList.add("open");});
+  $("zclose").addEventListener("click",function(){$("zoom").classList.remove("open");});
   $("count").addEventListener("click",function(){buildSum();$("sum").classList.add("open");});
   $("sumclose").addEventListener("click",function(){$("sum").classList.remove("open");});
 
